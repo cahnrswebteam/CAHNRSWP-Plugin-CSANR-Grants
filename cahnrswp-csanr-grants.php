@@ -16,7 +16,7 @@ class CAHNRSWP_CSANR_Grants {
 	/**
 	 * @var string Taxonomy slugs.
 	 */
-	var $grants_investigators_taxonomy = 'investigator';
+	var $grants_investigators_taxonomy = 'investigators';
 	var $grants_status_taxonomy = 'status';
 	var $grants_topics_taxonomy = 'topic';
 	var $grants_types_taxonomy = 'type';
@@ -260,7 +260,7 @@ class CAHNRSWP_CSANR_Grants {
 	 */
 	private function annual_entry_markup( $i, $index, $entry ) {
 		$years = array( '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020' );
-		$investigators = get_terms( 'investigators', array( 'hide_empty' => 0 ) );
+		$investigators = get_terms( $this->grants_investigators_taxonomy, array( 'hide_empty' => 0 ) );
 		$investigator_fields = array(
 			'principal_investigators' => 'Principal Investigator(s)',
 			'additional_investigators' => 'Additional Investigator(s)',
@@ -291,9 +291,13 @@ class CAHNRSWP_CSANR_Grants {
 					<?php $investigator_value = $entry[$investigator_field_key]; ?>
 					<label><?php echo $investigator_field_name; ?><br />
 						<select class="investigators" multiple="multiple" name="_csanr_grant_annual_entry[<?php echo $i; ?>][<?php echo $investigator_field_key; ?>]">
-							<?php /*foreach ( $investigators as $investigator ) : ?>
-							<option value="<?php echo $investigator->term_id; ?>" <?php selected( $investigator_value, $investigator->term_id ); ?>><?php echo $investigator->description; ?></option>
-							<?php endforeach;*/ ?>
+							<?php foreach ( $investigators as $investigator ) : ?>
+							<option value="<?php echo $investigator->term_id; ?>" <?php
+								if ( $investigator_value ) {
+									selected( in_array( $investigator->term_id, $investigator_value ) );
+								}
+								?>><?php echo $investigator->description; ?></option>
+							<?php endforeach; ?>
 						</select>
 					</label>
 				</p>
@@ -381,35 +385,77 @@ class CAHNRSWP_CSANR_Grants {
 		// Annual entries.
 		if ( isset( $_POST[ $field ] ) && '' != $_POST[ $field ] ) {
 			$annual_entries = array();
+			$all_investigators = array();
 			foreach ( $_POST['_csanr_grant_annual_entry'] as $entry ) {
+				$pi_array = array();
+				$ai_array = array();
+				$si_array = array();
 				/*if ( $entry['principal_investigators'] ) {
 					foreach ( $entry['principal_investigators'] as $pi ) {
 						$pi_array[] = sanitize_text_field( $pi );
+						if ( ! in_array( $pi, $all_investigators ) ) {
+							$all_investigators[] = sanitize_text_field( $pi );
+						}
 					}
 				}
 				if ( $entry['additional_investigators'] ) {
 					foreach ( $entry['additional_investigators'] as $ai ) {
 						$ai_array[] = sanitize_text_field( $ai );
+						if ( ! in_array( $pi, $all_investigators ) ) {
+							$all_investigators[] = sanitize_text_field( $ai );
+						}
 					}
 				}
 				if ( $entry['student_investigators'] ) {
 					foreach ( $entry['student_investigators'] as $si ) {
 						$si_array[] = sanitize_text_field( $si );
+						if ( ! in_array( $pi, $all_investigators ) ) {
+							$all_investigators[] = sanitize_text_field( $si );
+						}
 					}
 				}*/
-				$annual_entries[ sanitize_text_field( $entry['year'] ) ] = array(
-					/*'principal_investigators' => $pi_array,
+				if ( $entry['year'] ) {
+					$year = sanitize_text_field( $entry['year'] );
+					$annual_entries[ $year ] = array();
+					if ( ! empty( $pi_array ) ) {
+						$annual_entries[ $year ]['principal_investigators'] = array();
+						$annual_entries[ $year ]['principal_investigators'] = $pi_array;
+					}
+					if ( ! empty( $ai_array ) ) {
+						$annual_entries[ $year ]['additional_investigators'] = array();
+						$annual_entries[ $year ]['additional_investigators'] = $ai_array;
+					}
+					if ( ! empty( $si_array ) ) {
+						$annual_entries[ $year ]['student_investigators'] = array();
+						$annual_entries[ $year ]['student_investigators'] = $si_array;
+					}
+					if ( $entry['progress_report'] ) {
+						$annual_entries[ $year ]['progress_report'] = sanitize_text_field( $entry['progress_report'] );
+					}
+					if ( $entry['additional_progress_report'] ) {
+						$annual_entries[ $year ]['additional_progress_report'] = sanitize_text_field( $entry['additional_progress_report'] );
+					}
+					if ( $entry['amount'] ) {
+						$annual_entries[ $year ]['amount'] = sanitize_text_field( $entry['amount'] );
+					}
+					
+				}
+				/*$annual_entries[ sanitize_text_field( $entry['year'] ) ] = array(
+					'principal_investigators' => $pi_array,
 					'additional_investigators' => $ai_array,
-					'student_investigators' => $si_array,*/
+					'student_investigators' => $si_array,
 					'progress_report' => sanitize_text_field( $entry['progress_report'] ),
 					'additional_progress_report' => sanitize_text_field( $entry['additional_progress_report'] ),
 					'amount' => sanitize_text_field( $entry['amount'] )
-				);
+				);*/
 			}
 			if ( ! empty( $annual_entries ) ) {
 				update_post_meta( $post_id, '_csanr_grant_annual_entries', $annual_entries );
 			} else {
 				delete_post_meta( $post_id, '_csanr_grant_annual_entries' );
+			}
+			if ( ! empty( $all_investigators ) ) {
+				
 			}
 		}
 		/* // For each selected investigator, set the taxonomy term
