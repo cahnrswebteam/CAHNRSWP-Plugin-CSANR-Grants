@@ -290,7 +290,7 @@ class CAHNRSWP_CSANR_Grants {
 				<p>
 					<?php $investigator_value = $entry[$investigator_field_key]; ?>
 					<label><?php echo $investigator_field_name; ?><br />
-						<select class="investigators" multiple="multiple" name="_csanr_grant_annual_entry[<?php echo $i; ?>][<?php echo $investigator_field_key; ?>]">
+						<select class="investigators" multiple="multiple" name="_csanr_grant_annual_entry[<?php echo $i; ?>][<?php echo $investigator_field_key; ?>][]">
 							<?php foreach ( $investigators as $investigator ) : ?>
 							<option value="<?php echo $investigator->term_id; ?>" <?php
 								if ( $investigator_value ) {
@@ -351,6 +351,7 @@ class CAHNRSWP_CSANR_Grants {
 	 * @return mixed
 	 */
 	public function save_post( $post_id ) {
+		// Check nonce.
 		if ( ! isset( $_POST['grants_meta_nonce'] ) ) {
 			return $post_id;
 		}
@@ -358,13 +359,15 @@ class CAHNRSWP_CSANR_Grants {
 		if ( ! wp_verify_nonce( $nonce, 'grants_meta' ) ) {
 			return $post_id;
 		}
+		// Bail if autosave.
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
 			return $post_id;
 		}
+		// Bail if user doesn't have adequate permissions.
 		if ( ! current_user_can( 'edit_post', $post_id ) ) {
 			return $post_id;
 		}
-		// Text inputs.
+		// Sanitize and save text inputs.
 		$text_fields = array( '_csanr_grant_project_id', '_csanr_grant_funds', '_csanr_grant_arc_funds' );
 		foreach( $text_fields as $field ) {
 			if ( isset( $_POST[ $field ] ) ) {
@@ -373,7 +376,7 @@ class CAHNRSWP_CSANR_Grants {
 				delete_post_meta( $post_id, $field );
 			}
 		}
-		// WP editors.
+		// Sanitize and save wp_editors.
 		$wp_editor_fields = array( '_csanr_grant_publications', '_csanr_grant_additional_funds', '_csanr_grant_impacts', '_csanr_grant_admin_comments' );
 		foreach( $wp_editor_fields as $field ) {
 			if ( isset( $_POST[ $field ] ) ) {
@@ -382,38 +385,41 @@ class CAHNRSWP_CSANR_Grants {
 				delete_post_meta( $post_id, $field );
 			}
 		}
-		// Annual entries.
-		if ( isset( $_POST[ $field ] ) && '' != $_POST[ $field ] ) {
+		// Annual entries. (There are almost certainly some inefficiencies ahead!)
+		if ( isset( $_POST['_csanr_grant_annual_entry'] ) ) {
+			// Sanitize data and build arrays to work with.
 			$annual_entries = array();
-			$all_investigators = array();
+			$investigators = array();
 			foreach ( $_POST['_csanr_grant_annual_entry'] as $entry ) {
 				$pi_array = array();
 				$ai_array = array();
 				$si_array = array();
-				/*if ( $entry['principal_investigators'] ) {
+				// Sanitize each selected investigator, push to arrays for entry and taxonomy term setting.
+				if ( $entry['principal_investigators'] ) {
 					foreach ( $entry['principal_investigators'] as $pi ) {
 						$pi_array[] = sanitize_text_field( $pi );
-						if ( ! in_array( $pi, $all_investigators ) ) {
-							$all_investigators[] = sanitize_text_field( $pi );
+						if ( ! in_array( $pi, $investigators ) ) {
+							$investigators[] = (int)sanitize_text_field( $pi );
 						}
 					}
 				}
 				if ( $entry['additional_investigators'] ) {
 					foreach ( $entry['additional_investigators'] as $ai ) {
 						$ai_array[] = sanitize_text_field( $ai );
-						if ( ! in_array( $pi, $all_investigators ) ) {
-							$all_investigators[] = sanitize_text_field( $ai );
+						if ( ! in_array( $ai, $investigators ) ) {
+							$investigators[] = (int)sanitize_text_field( $ai );
 						}
 					}
 				}
 				if ( $entry['student_investigators'] ) {
 					foreach ( $entry['student_investigators'] as $si ) {
 						$si_array[] = sanitize_text_field( $si );
-						if ( ! in_array( $pi, $all_investigators ) ) {
-							$all_investigators[] = sanitize_text_field( $si );
+						if ( ! in_array( $si, $investigators ) ) {
+							$investigators[] = (int)sanitize_text_field( $si );
 						}
 					}
-				}*/
+				}
+				// Build an entry for each year. 
 				if ( $entry['year'] ) {
 					$year = sanitize_text_field( $entry['year'] );
 					$annual_entries[ $year ] = array();
@@ -438,43 +444,19 @@ class CAHNRSWP_CSANR_Grants {
 					if ( $entry['amount'] ) {
 						$annual_entries[ $year ]['amount'] = sanitize_text_field( $entry['amount'] );
 					}
-					
 				}
-				/*$annual_entries[ sanitize_text_field( $entry['year'] ) ] = array(
-					'principal_investigators' => $pi_array,
-					'additional_investigators' => $ai_array,
-					'student_investigators' => $si_array,
-					'progress_report' => sanitize_text_field( $entry['progress_report'] ),
-					'additional_progress_report' => sanitize_text_field( $entry['additional_progress_report'] ),
-					'amount' => sanitize_text_field( $entry['amount'] )
-				);*/
 			}
+			// Save.
 			if ( ! empty( $annual_entries ) ) {
 				update_post_meta( $post_id, '_csanr_grant_annual_entries', $annual_entries );
 			} else {
 				delete_post_meta( $post_id, '_csanr_grant_annual_entries' );
 			}
-			if ( ! empty( $all_investigators ) ) {
-				
+			// Set the "Investigator" taxonomy terms.
+			if ( ! empty( $investigators ) ) {
+				wp_set_object_terms( $post_id, $investigators, $this->grants_investigators_taxonomy );
 			}
 		}
-		/* // For each selected investigator, set the taxonomy term
-		$topics = array();
-		foreach ( $categories as $category ) {
-			if ( 'Agriculture' === $category ) {
-				$topics[] = 143;
-			}
-			if ( 'Food and Nutrition' === $category ) {
-				$topics[] = 64;
-			}
-			//if ( 'Youth and Families' === $category ) {
-			//	$topic_term = get_term_by( 'id', 143, 'topic' );
-			//	$topics[] = $topic_term->term_id;
-			//}
-		}
-		if ( !empty( $topics ) ) {
-			\wp_set_object_terms( $post_id, $topics, 'topic' );
-		}*/
 	}
 
 	/**
