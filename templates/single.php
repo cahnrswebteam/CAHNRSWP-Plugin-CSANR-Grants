@@ -45,9 +45,11 @@
 						<h2>Annual Entries</h2>
 						<?php foreach ( $grant_annual_entries as $year => $entry ) : ?>
 						<?php
-							$principal_investigators    = $entry['principal_investigators'];
-							$additional_investigators   = $entry['additional_investigators'];
-							$student_investigators      = $entry['student_investigators'];
+							$investigators = array(
+								'Principal Investigator'  => $entry['principal_investigators'],
+								'Additional Investigator' => $entry['additional_investigators'],
+								'Graduate Student'        => $entry['student_investigators'],
+							);
 							$progress_report            = $entry['progress_report'];
 							$additional_progress_report = $entry['additional_progress_report'];
 							$amount                     = $entry['amount'];
@@ -58,48 +60,29 @@
 							</dt>
 							<dd>
 								<table>
-									<?php if ( $principal_investigators ) : ?>
-									<tr>
-										<?php $pi_count = count( $principal_investigators ); ?>
-	  								<td>Principal Investigator<?php if ( $pi_count > 1 ) echo 's'; ?>:</td>
-	  								<td><?php
-											$pi_counter = 1;
-											foreach ( $principal_investigators as $pi ) {
-												$pi_object = get_term( $pi, 'investigators' );
-												echo $pi_object->description;
-												if ( $pi_counter != $pi_count ) {
-													echo '<br />';
-												}
-												$pi_counter++;
-											}
-										?></td>
-									</tr>
-									<?php endif; ?>
-									<?php if ( $additional_investigators ) : ?>
-									<tr>
-										<?php $ai_count = count( $additional_investigators ); ?>
-										<td>Additional Investigator<?php if ( $ai_count > 1 ) echo 's'; ?>:</td>
-										<td><?php
-											$ai_counter = 1;
-											foreach ( $additional_investigators as $ai ) {
-												$ai_object = get_term( $ai, 'investigators' );
-												echo $ai_object->description;
-												if ( $ai_counter != $ai_count ) {
-													echo '<br />';
-												}
-												$ai_counter++;
-											}
-										?></td>
-									</tr>
-									<?php endif; ?>
-									<?php if ( $student_investigators ) : ?>
-									<tr>
-										<td>Student Investigator<?php if ( count( $student_investigators ) > 1 ) echo 's'; ?>:</td>
-										<td>
-											
-										</td>
-									</tr>
-									<?php endif; ?>
+									<?php
+                  if ( $investigators ) :
+										foreach ( $investigators as $group => $investigators ) :
+											if ( $investigators ) :
+												$count = count( $investigators );
+												?><tr>
+													<td><?php echo $group; if ( $count > 1 ) { echo 's'; } ?>:</td>
+													<td><?php
+														$counter = 1;
+														foreach ( $investigators as $investigator ) {
+															$investigator_object = get_term( $investigator, 'investigators' );
+															echo $investigator_object->description;
+															if ( $counter != $count ) {
+																echo '<br />';
+															}
+															$counter++;
+														}
+													?></td>
+												</tr><?php
+											endif;
+										endforeach;
+									endif;
+									?>
 									<?php if ( $amount ) : ?>
 									<tr>
 										<td>Grant Amount:</td>

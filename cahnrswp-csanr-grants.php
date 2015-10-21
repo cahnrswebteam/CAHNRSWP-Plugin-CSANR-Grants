@@ -264,7 +264,7 @@ class CAHNRSWP_CSANR_Grants {
 		$investigator_fields = array(
 			'principal_investigators' => 'Principal Investigator(s)',
 			'additional_investigators' => 'Additional Investigator(s)',
-			'student_investigators' => 'Student Investigator(s)',
+			'student_investigators' => 'Graduate Student(s)',
 		);
 		$text_fields  = array(
 			'progress_report'            => 'Progress Report URL',
