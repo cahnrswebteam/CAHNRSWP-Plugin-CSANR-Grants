@@ -16,7 +16,7 @@ class CAHNRSWP_CSANR_Grants {
 	/**
 	 * @var string Taxonomy slugs.
 	 */
-	var $grants_investigators_taxonomy = 'investigators';
+	var $grants_investigators_taxonomy = 'investigator';
 	var $grants_status_taxonomy = 'status';
 	var $grants_topics_taxonomy = 'topic';
 	var $grants_types_taxonomy = 'type';
@@ -29,6 +29,8 @@ class CAHNRSWP_CSANR_Grants {
 		add_action( 'init', array( $this, 'register_taxonomies' ), 10 );
 		add_action( 'init', array( $this, 'grants_rewrite_rules' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+		add_filter( 'manage_edit-grants_columns', array( $this, 'grants_columns' ), 10, 1 );
+		add_action( 'manage_grants_posts_custom_column', array( $this, 'grant_columns_data' ), 10, 2 );
 		add_action( 'edit_form_after_title', array( $this, 'edit_form_after_title' ) );
 		add_action( 'edit_form_after_editor', array( $this, 'edit_form_after_editor' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 10, 1 );
@@ -199,8 +201,55 @@ class CAHNRSWP_CSANR_Grants {
 	public function admin_enqueue_scripts( $hook ) {
 		$screen = get_current_screen();
 		if ( ( 'post-new.php' === $hook || 'post.php' === $hook ) && $this->grants_post_type === $screen->post_type ) {
+			wp_enqueue_style( 'grant-admin', plugins_url( 'css/admin-grant.css', __FILE__ ), array() );
+			wp_enqueue_script( 'grant-admin', plugins_url( 'js/admin-grant.js', __FILE__ ), array( 'jquery' ) );
+		}
+		if ( 'edit.php' === $hook && $this->grants_post_type === $screen->post_type ) {
 			wp_enqueue_style( 'grants-admin', plugins_url( 'css/admin-grants.css', __FILE__ ), array() );
-			wp_enqueue_script( 'grants-admin', plugins_url( 'js/admin-grants.js', __FILE__ ), array( 'jquery' ) );
+		}
+	}
+
+	/**
+	 * Replace the list of columns to print on the All Grants screen.
+	 *
+	 * @param array $columns Default columns.
+	 *
+	 * @return array Columns to display.
+	 */
+	public function grants_columns( $columns ) {
+		return array(
+			'cb' => '<input type="checkbox" />',
+			'id' => __( 'ID' ),
+			'title' => __( 'Title' ),
+			'taxonomy-' . $this->grants_investigators_taxonomy => 'Investigators',
+			'taxonomy-' . $this->grants_status_taxonomy => 'Status',
+			'taxonomy-' . $this->grants_topics_taxonomy => 'Topics',
+			'taxonomy-' . $this->grants_types_taxonomy => 'Types',
+			'admin-comments' =>  __( 'Admin Comments' ),
+			'date' => __( 'Date' ),
+		);
+	}
+
+	/**
+	 * Output values for custom Grants columns.
+	 *
+	 * @param string $column_name The name of the column to display.
+	 * @param int $post_id The ID of the current post.
+	 */
+	public function grant_columns_data( $column_name, $post_id ) {
+		$grant_id = get_post_meta( $post_id, '_csanr_grant_project_id', true );
+		$grant_admin_comments = get_post_meta( $post_id, '_csanr_grant_admin_comments', true );
+		switch( $column_name ) {
+			case 'id' :
+				if ( $grant_id ) {
+					echo esc_html( $grant_id );
+				}
+				break;
+			case 'admin-comments' :
+				if ( $grant_admin_comments ) {
+					echo esc_html( $grant_admin_comments );
+				}
+				break;
 		}
 	}
 
@@ -326,9 +375,9 @@ class CAHNRSWP_CSANR_Grants {
 					<label><?php echo $investigator_field_name; ?><br />
 						<select class="investigators" multiple="multiple" name="_csanr_grant_annual_entry[<?php echo $i; ?>][<?php echo $investigator_field_key; ?>][]">
 							<?php foreach ( $investigators as $investigator ) : ?>
-							<option value="<?php echo $investigator->term_id; ?>" <?php
+							<option value="<?php echo $investigator->slug; ?>" <?php
 								if ( $investigator_value ) {
-									selected( in_array( $investigator->term_id, $investigator_value ) );
+									selected( in_array( $investigator->slug, $investigator_value ) );
 								}
 								?>><?php echo $investigator->description; ?></option>
 							<?php endforeach; ?>
@@ -433,7 +482,7 @@ class CAHNRSWP_CSANR_Grants {
 					foreach ( $entry['principal_investigators'] as $pi ) {
 						$pi_array[] = sanitize_text_field( $pi );
 						if ( ! in_array( $pi, $investigators ) ) {
-							$investigators[] = (int)sanitize_text_field( $pi );
+							$investigators[] = sanitize_text_field( $pi );
 						}
 					}
 				}
@@ -441,7 +490,7 @@ class CAHNRSWP_CSANR_Grants {
 					foreach ( $entry['additional_investigators'] as $ai ) {
 						$ai_array[] = sanitize_text_field( $ai );
 						if ( ! in_array( $ai, $investigators ) ) {
-							$investigators[] = (int)sanitize_text_field( $ai );
+							$investigators[] = sanitize_text_field( $ai );
 						}
 					}
 				}
@@ -449,7 +498,7 @@ class CAHNRSWP_CSANR_Grants {
 					foreach ( $entry['student_investigators'] as $si ) {
 						$si_array[] = sanitize_text_field( $si );
 						if ( ! in_array( $si, $investigators ) ) {
-							$investigators[] = (int)sanitize_text_field( $si );
+							$investigators[] = sanitize_text_field( $si );
 						}
 					}
 				}
@@ -525,7 +574,7 @@ class CAHNRSWP_CSANR_Grants {
 	}
 
 	/**
-	 * Apply 'dogeared' class to the Impact Report menu item when viewing an impact report.
+	 * Apply 'dogeared' class to the Grants menu item when viewing a grant.
 	 *
 	 * @param array $classes Current list of nav menu classes.
 	 * @param WP_Post $item Post object representing the menu item.

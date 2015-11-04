@@ -36,9 +36,6 @@
 							<p><?php echo esc_html( $grant_id ); ?></p>
 						</td>
 						<td><p><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></p>
-            <?php
-						//delete_post_meta( get_the_ID(), '_grant' );
-						?>
 
 						</td>
 						<td>

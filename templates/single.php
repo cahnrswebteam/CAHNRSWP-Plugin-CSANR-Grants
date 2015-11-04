@@ -70,7 +70,7 @@
 													<td><?php
 														$counter = 1;
 														foreach ( $investigators as $investigator ) {
-															$investigator_object = get_term( $investigator, 'investigators' );
+															$investigator_object = get_term_by( 'slug', $investigator, 'investigator' );
 															echo $investigator_object->description;
 															if ( $counter != $count ) {
 																echo '<br />';
