@@ -11,7 +11,7 @@ class CAHNRSWP_CSANR_Grants {
 	/**
 	 * @var string Content type slug.
 	 */
-	var $grants_content_type = 'grants';
+	var $grants_post_type = 'grants';
 
 	/**
 	 * @var string Taxonomy slugs.
@@ -25,7 +25,9 @@ class CAHNRSWP_CSANR_Grants {
 	 * Start the plugin and apply associated hooks.
 	 */
 	public function __construct() {
-		add_action( 'init', array( $this, 'init' ), 11 );
+		add_action( 'init', array( $this, 'register_post_type' ), 11 );
+		add_action( 'init', array( $this, 'register_taxonomies' ), 10 );
+		add_action( 'init', array( $this, 'grants_rewrite_rules' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 		add_action( 'edit_form_after_title', array( $this, 'edit_form_after_title' ) );
 		add_action( 'edit_form_after_editor', array( $this, 'edit_form_after_editor' ) );
@@ -37,10 +39,9 @@ class CAHNRSWP_CSANR_Grants {
 	}
 
 	/**
-	 * Register content type and taxonomies.
+	 * Register content type.
 	 */
-	public function init() {
-
+	public function register_post_type() {
 		$grants = array(
 			'description'   => 'Research funded through CSANR.',
 			'public'        => true,
@@ -67,11 +68,17 @@ class CAHNRSWP_CSANR_Grants {
 				'revisions',
 			),
 			'rewrite'       => array(
-				'slug'       => $this->grants_content_type,
+				'slug'       => $this->grants_post_type,
 				'with_front' => false
 			),
 		);
-		register_post_type( $this->grants_content_type, $grants );
+		register_post_type( $this->grants_post_type, $grants );
+	}
+
+	/**
+	 * Register taxonomies.
+	 */
+	public function register_taxonomies() {
 
 		$investigators = array(
 			'labels'            => array(
@@ -85,6 +92,10 @@ class CAHNRSWP_CSANR_Grants {
 				'new_item_name' => 'New Investigator Name',
 				'menu_name'     => 'Investigators',
 			),
+			'rewrite'      			=> array(
+				'slug'       => $this->grants_post_type . '/' . $this->grants_investigators_taxonomy,
+				'with_front' => false
+			),
 			'public'            => true,
 			'hierarchical'      => true,
 			'show_ui'           => true,
@@ -92,7 +103,7 @@ class CAHNRSWP_CSANR_Grants {
 			'show_in_nav_menus' => false,
 			'show_tagcloud'     => false,
 		);
-		register_taxonomy( $this->grants_investigators_taxonomy, $this->grants_content_type, $investigators );
+		register_taxonomy( $this->grants_investigators_taxonomy, $this->grants_post_type, $investigators );
 
 		$status = array(
 			'labels'            => array(
@@ -106,6 +117,10 @@ class CAHNRSWP_CSANR_Grants {
 				'new_item_name' => 'New Status Name',
 				'menu_name'     => 'Status',
 			),
+			'rewrite'      			=> array(
+				'slug'       => $this->grants_post_type . '/' . $this->grants_status_taxonomy,
+				'with_front' => false
+			),
 			'public'            => true,
 			'hierarchical'      => true,
 			'show_ui'           => true,
@@ -113,7 +128,7 @@ class CAHNRSWP_CSANR_Grants {
 			'show_in_nav_menus' => false,
 			'show_tagcloud'     => false,
 		);
-		register_taxonomy( $this->grants_status_taxonomy, $this->grants_content_type, $status );
+		register_taxonomy( $this->grants_status_taxonomy, $this->grants_post_type, $status );
 
 		$topics = array(
 			'labels'            => array(
@@ -127,6 +142,10 @@ class CAHNRSWP_CSANR_Grants {
 				'new_item_name' => 'New Topic Name',
 				'menu_name'     => 'Topics',
 			),
+			'rewrite'      			=> array(
+				'slug'       => $this->grants_post_type . '/' . $this->grants_topics_taxonomy,
+				'with_front' => false
+			),
 			'public'            => true,
 			'hierarchical'      => true,
 			'show_ui'           => true,
@@ -134,7 +153,7 @@ class CAHNRSWP_CSANR_Grants {
 			'show_in_nav_menus' => false,
 			'show_tagcloud'     => false,
 		);
-		register_taxonomy( $this->grants_topics_taxonomy, $this->grants_content_type, $topics );
+		register_taxonomy( $this->grants_topics_taxonomy, $this->grants_post_type, $topics );
 
 		$types = array(
 			'labels'            => array(
@@ -148,6 +167,10 @@ class CAHNRSWP_CSANR_Grants {
 				'new_item_name' => 'New Type Name',
 				'menu_name'     => 'Types',
 			),
+			'rewrite'      			=> array(
+				'slug'       => $this->grants_post_type . '/' . $this->grants_types_taxonomy,
+				'with_front' => false
+			),
 			'public'            => true,
 			'hierarchical'      => true,
 			'show_ui'           => true,
@@ -155,8 +178,19 @@ class CAHNRSWP_CSANR_Grants {
 			'show_in_nav_menus' => false,
 			'show_tagcloud'     => false,
 		);
-		register_taxonomy( $this->grants_types_taxonomy, $this->grants_content_type, $types );
+		register_taxonomy( $this->grants_types_taxonomy, $this->grants_post_type, $types );
 
+	}
+
+	/**
+	 * Add year archive stuff.
+	 */
+	public function grants_rewrite_rules() {
+		add_rewrite_rule(
+			$this->grants_post_type . '/([0-9]{4})/?$',
+			'index.php?post_type=' . $this->grants_post_type . '&year=$matches[1]',
+			'top'
+		);
 	}
 
 	/**
@@ -164,7 +198,7 @@ class CAHNRSWP_CSANR_Grants {
 	 */
 	public function admin_enqueue_scripts( $hook ) {
 		$screen = get_current_screen();
-		if ( ( 'post-new.php' === $hook || 'post.php' === $hook ) && $this->grants_content_type === $screen->post_type ) {
+		if ( ( 'post-new.php' === $hook || 'post.php' === $hook ) && $this->grants_post_type === $screen->post_type ) {
 			wp_enqueue_style( 'grants-admin', plugins_url( 'css/admin-grants.css', __FILE__ ), array() );
 			wp_enqueue_script( 'grants-admin', plugins_url( 'js/admin-grants.js', __FILE__ ), array( 'jquery' ) );
 		}
@@ -176,7 +210,7 @@ class CAHNRSWP_CSANR_Grants {
 	 * @param WP_Post $post
 	 */
 	public function edit_form_after_title( $post ) {
-		if ( $this->grants_content_type !== $post->post_type ) {
+		if ( $this->grants_post_type !== $post->post_type ) {
 			return;
 		}
 		do_meta_boxes( get_current_screen(), 'after_title', $post );
@@ -188,7 +222,7 @@ class CAHNRSWP_CSANR_Grants {
 	 * @param WP_Post $post
 	 */
 	public function edit_form_after_editor( $post ) {
-		if ( $this->grants_content_type !== $post->post_type ) {
+		if ( $this->grants_post_type !== $post->post_type ) {
 			return;
 		}
 		do_meta_boxes( get_current_screen(), 'after_editor', $post );
@@ -201,14 +235,14 @@ class CAHNRSWP_CSANR_Grants {
 	 * @param string $post_type The slug of the current post type.
 	 */
 	public function add_meta_boxes( $post_type ) {
-		if ( $this->grants_content_type !== $post_type ) {
+		if ( $this->grants_post_type !== $post_type ) {
 			return;
 		}
 		add_meta_box(
 			'csanr_grant_information',
 			'Grant Information',
 			array( $this, 'csanr_grant_information' ),
-			$this->grants_content_type,
+			$this->grants_post_type,
 			'after_title',
 			'high'
 		);
@@ -216,7 +250,7 @@ class CAHNRSWP_CSANR_Grants {
 			'csanr_grant_annual_entry',
 			'Annual Entries',
 			array( $this, 'csanr_grant_annual_entry' ),
-			$this->grants_content_type,
+			$this->grants_post_type,
 			'after_editor',
 			'high'
 		);
@@ -419,7 +453,7 @@ class CAHNRSWP_CSANR_Grants {
 						}
 					}
 				}
-				// Build an entry for each year. 
+				// Build an entry for each year.
 				if ( $entry['year'] ) {
 					$year = sanitize_text_field( $entry['year'] );
 					$annual_entries[ $year ] = array();
@@ -463,11 +497,11 @@ class CAHNRSWP_CSANR_Grants {
 	 * Enqueue the scripts and styles used on the front end.
 	 */
 	public function wp_enqueue_scripts() {
-		if ( is_single() && $this->grants_content_type == get_post_type() ) {
+		if ( is_single() && $this->grants_post_type == get_post_type() ) {
 			wp_enqueue_style( 'grant', plugins_url( 'css/grant.css', __FILE__ ), array( 'wsu-spine' ) );
 			//wp_enqueue_script( 'grant', plugins_url( 'js/grant.js', __FILE__ ), array( 'jquery' ), '', true );
 		}
-		if ( is_post_type_archive( $this->grants_content_type ) ) {
+		if ( is_post_type_archive( $this->grants_post_type ) ) {
 			wp_enqueue_style( 'grants-archive', plugins_url( 'css/grant-archive.css', __FILE__ ), array( 'spine-theme' ) );
 			//wp_enqueue_script( 'grants-archive', plugins_url( 'js/grant-archive.js', __FILE__ ), array( 'jquery' ), '', true );
 		}
@@ -481,10 +515,10 @@ class CAHNRSWP_CSANR_Grants {
 	 * @return string template path
 	 */
 	public function template_include( $template ) {
-		if ( is_single() && $this->grants_content_type == get_post_type() ) {
+		if ( is_single() && $this->grants_post_type == get_post_type() ) {
 			$template = plugin_dir_path( __FILE__ ) . 'templates/single.php';
 		}
-		if ( is_post_type_archive( $this->grants_content_type ) ) {
+		if ( is_post_type_archive( $this->grants_post_type ) || is_tax( array( $this->grants_investigators_taxonomy, $this->grants_status_taxonomy, $this->grants_topics_taxonomy, $this->grants_types_taxonomy ) ) ) {
 			$template = plugin_dir_path( __FILE__ ) . 'templates/index.php';
 		}
 		return $template;
@@ -500,8 +534,8 @@ class CAHNRSWP_CSANR_Grants {
 	 * @return array Modified list of nav menu classes.
 	 */
 	public function nav_menu_css_class( $classes, $item, $args ) {
-		$url = site_url() . '/' . $this->grants_content_type . '/';
-		if ( 'site' === $args->theme_location && $this->grants_content_type == get_post_type() && $item->url == $url ) {
+		$url = site_url() . '/' . $this->grants_post_type . '/';
+		if ( 'site' === $args->theme_location && $this->grants_post_type == get_post_type() && $item->url == $url ) {
 			$classes[] = 'dogeared';
 		}
 		return $classes;
