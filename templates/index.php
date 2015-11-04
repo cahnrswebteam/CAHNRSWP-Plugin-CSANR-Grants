@@ -24,7 +24,7 @@
 				<tbody>
 				<?php
 				global $query_string;
-				query_posts( $query_string . '&posts_per_page=-1' ); ?>
+				query_posts( $query_string . '&posts_per_page=-1&order=ASC' ); ?>
 
 				<?php while ( have_posts() ) : the_post(); ?>
 					<?php
@@ -37,59 +37,7 @@
 						</td>
 						<td><p><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></p>
             <?php
-/*
-$grant = get_post_meta( get_the_ID(), '_grant' );
-$entries = $grant[0]['annual_entries'];
-if ( $entries ) {
-	$new_entries = array();
-	foreach ( $entries as $entry ) {
-		$pi_array = array();
-		$ai_array = array();
-		$si_array = array();
-
-		$new_entries[ $entry['year'] ] = array();
-
-		$pis = $entry['pi'];
-		if ( $pis ) { foreach ( $pis as $pi ) { $pi_array[] = $pi; } }
-		if ( ! empty( $pi_array ) ) {
-			$new_entries[ $entry['year'] ]['principal_investigators'] = array();
-			$new_entries[ $entry['year'] ]['principal_investigators'] = $pi_array;
-		}
-
-		$ais = $entry['additional'];
-		if ( $ais ) { foreach ( $ais as $ai ) { $ai_array[] = $ai; } }
-		if ( ! empty( $ai_array ) ) {
-			$new_entries[ $entry['year'] ]['additional_investigators'] = array();
-			$new_entries[ $entry['year'] ]['additional_investigators'] = $ai_array;
-		}
-
-		$sis = $entry['students'];
-		if ( $sis ) { foreach ( $sis as $si ) { $si_array[] = $si; } }
-		if ( ! empty( $si_array ) ) {
-			$new_entries[ $entry['year'] ]['student_investigators'] = array();
-			$new_entries[ $entry['year'] ]['student_investigators'] = $si_array;
-		}
-
-		if ( $entry['progress'] ) {
-			$new_entries[ $entry['year'] ]['progress_report'] = $entry['progress'];
-		}
-
-		if ( $entry['additional_progress'] ) {
-			$new_entries[ $entry['year'] ]['additional_progress_report'] = $entry['additional_progress'];
-		}
-
-		if ( $entry['amount'] ) {
-			$new_entries[ $entry['year'] ]['amount'] = $entry['amount'];
-		}
-
-	}
-
-	//print_r($new_entries);
-	//add_post_meta( get_the_ID(), '_csanr_grant_annual_entries', $new_entries );
-}
-*/
 						//delete_post_meta( get_the_ID(), '_grant' );
-
 						?>
 
 						</td>
