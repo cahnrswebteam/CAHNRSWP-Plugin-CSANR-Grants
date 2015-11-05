@@ -20,7 +20,6 @@
 				$grant_admin_comments   = get_post_meta( get_the_ID(), '_csanr_grant_admin_comments', true );
 				// Grant taxonomic data.
 				$status        = wp_get_post_terms( get_the_ID(), 'status', array( 'fields' => 'names' ) );
-				//$investigators = wp_get_post_terms( get_the_ID(), 'investigator' );
 			?>
 
 			<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
@@ -43,9 +42,10 @@
 
 					<?php if ( $grant_annual_entries ) : ?>
 						<h2>Annual Entries</h2>
+						<?php $disclosed = ( 3 > count( $grant_annual_entries ) ) ? 'disclosed' : ''; ?>
 						<?php foreach ( $grant_annual_entries as $year => $entry ) : ?>
 						<?php
-							$investigators = array(
+							$investigator_groups = array(
 								'Principal Investigator'  => $entry['principal_investigators'],
 								'Additional Investigator' => $entry['additional_investigators'],
 								'Graduate Student'        => $entry['student_investigators'],
@@ -54,28 +54,28 @@
 							$additional_progress_report = $entry['additional_progress_report'];
 							$amount                     = $entry['amount'];
 						?>
-						<dl class="cahnrs-accordion slide">
+						<dl class="cahnrs-accordion slide <?php echo $disclosed; ?>">
 							<dt>
 								<h3><?php echo esc_html( $year ); ?></h3>
 							</dt>
 							<dd>
 								<table>
 									<?php
-                  if ( $investigators ) :
-										foreach ( $investigators as $group => $investigators ) :
+                  if ( $investigator_groups ) :
+										foreach ( $investigator_groups as $group => $investigators ) :
 											if ( $investigators ) :
-												$count = count( $investigators );
+												$investigator_count = count( $investigators );
 												?><tr>
-													<td><?php echo $group; if ( $count > 1 ) { echo 's'; } ?>:</td>
+													<td><?php echo $group; if ( $investigator_count > 1 ) { echo 's'; } ?>:</td>
 													<td><?php
-														$counter = 1;
+														$investigator_counter = 1;
 														foreach ( $investigators as $investigator ) {
 															$investigator_object = get_term_by( 'slug', $investigator, 'investigator' );
 															echo $investigator_object->description;
-															if ( $counter != $count ) {
+															if ( $investigator_counter != $investigator_count ) {
 																echo '<br />';
 															}
-															$counter++;
+															$investigator_counter++;
 														}
 													?></td>
 												</tr><?php

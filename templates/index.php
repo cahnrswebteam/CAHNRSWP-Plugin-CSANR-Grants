@@ -23,29 +23,53 @@
 				</thead>
 				<tbody>
 				<?php
-				global $query_string;
-				query_posts( $query_string . '&posts_per_page=-1&order=ASC' ); ?>
-
+					global $query_string;
+					query_posts( $query_string . '&posts_per_page=-1&order=ASC&orderby=meta_value_num&meta_key=_csanr_grant_project_id' );
+				?>
 				<?php while ( have_posts() ) : the_post(); ?>
-					<?php
-						$investigator = wp_get_post_terms( $post_id, 'investigator' );
-					?>
 					<tr>
 						<td>
 							<?php $grant_id = get_post_meta( get_the_ID(), '_csanr_grant_project_id', true ); ?>
-							<p><?php echo esc_html( $grant_id ); ?></p>
+							<?php echo esc_html( $grant_id ); ?>
 						</td>
-						<td><p><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></p>
-
+						<td>
+							<a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
 						</td>
 						<td>
 						<?php
-							
+							$grant_annual_entries = get_post_meta( get_the_ID(), '_csanr_grant_annual_entries', true );
+							if ( $grant_annual_entries ) {
+								$unique_pis = array();
+								foreach ( $grant_annual_entries as $year => $entry ) {
+									if ( $entry['principal_investigators'] ) {
+										foreach ( $entry['principal_investigators'] as $pi ) {
+											if ( ! in_array( $pi, $unique_pis ) ) {
+												$unique_pis[] = $pi;
+												$investigator_object = get_term_by( 'slug', $pi, 'investigator' );
+												echo $investigator_object->name . '<br />';
+											}
+										}
+									}
+								}
+							}
 						?>
 						</td>
-						<?php if ( is_tax( 'investigator' ) ) : ?>
-
-						<?php endif; ?>
+						<?php
+							if ( is_tax( 'investigator' ) && $grant_annual_entries ) {
+								$unique_ais = array();
+								foreach ( $grant_annual_entries as $year => $entry ) {
+									if ( $entry['additional_investigators'] ) {
+										foreach ( $entry['additional_investigators'] as $ai ) {
+											if ( ! in_array( $ai, $unique_ais ) ) {
+												$unique_ais[] = $ai;
+												$investigator_object = get_term_by( 'slug', $ai, 'investigator' );
+												echo $investigator_object->name;
+											}
+										}
+									}
+								}
+							}
+						?>
 					</tr>
 				<?php endwhile; // end of the loop. ?>
 				<?php wp_reset_query(); ?>
