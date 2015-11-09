@@ -29,6 +29,8 @@ class CAHNRSWP_CSANR_Grants {
 		add_action( 'init', array( $this, 'register_taxonomies' ), 10 );
 		add_action( 'init', array( $this, 'grants_rewrite_rules' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+		add_action( 'admin_init', array( $this, 'admin_init' ) );
 		add_filter( 'manage_edit-grants_columns', array( $this, 'grants_columns' ), 10, 1 );
 		add_action( 'manage_grants_posts_custom_column', array( $this, 'grant_columns_data' ), 10, 2 );
 		add_action( 'edit_form_after_title', array( $this, 'edit_form_after_title' ) );
@@ -37,7 +39,7 @@ class CAHNRSWP_CSANR_Grants {
 		add_action( 'save_post_grants', array( $this, 'save_post' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
 		add_filter( 'template_include', array( $this, 'template_include' ), 1 );
-		//add_filter( 'nav_menu_css_class', array( $this, 'nav_menu_css_class'), 100, 3 );
+		add_filter( 'nav_menu_css_class', array( $this, 'nav_menu_css_class'), 100, 3 );
 		add_shortcode( 'csanr_grants_browse', array( $this, 'csanr_grants_browse' ) );
 	}
 
@@ -208,6 +210,57 @@ class CAHNRSWP_CSANR_Grants {
 		if ( 'edit.php' === $hook && $this->grants_post_type === $screen->post_type ) {
 			wp_enqueue_style( 'grants-admin', plugins_url( 'css/admin-grants.css', __FILE__ ), array() );
 		}
+	}
+
+	/**
+	 * Add options page link to the menu.
+	 */
+	public function admin_menu() {
+		add_submenu_page( 'edit.php?post_type=' . $this->grants_post_type, 'Grants Database Settings', 'Settings', 'manage_options', 'settings', array( $this, 'grants_settings_page' ) );
+	}
+
+	/**
+	 * Options page settings.
+	 */
+	public function admin_init() {
+		register_setting( 'grants_options', 'grants_menu_item' );
+	}
+
+	/**
+	 * Options page content.
+	 */
+	public function grants_settings_page() {
+		?>
+		<div class="wrap">
+			<h2>Grants Database Settings</h2>
+			<form method="post" action="options.php">
+				<?php settings_fields( 'grants_options' ); ?>
+				<?php do_settings_sections( 'grants_options' ); ?>
+				<table class="form-table">
+					<tr valign="top">
+						<th scope="row">Grant Database Menu Item</th>
+						<td>
+							<p>Select a menu item to mark as active when viewing a grant or grant archive.</p>
+							<?php
+								$menu_name = 'site';
+								$locations = get_nav_menu_locations();
+								if ( isset( $locations[ $menu_name ] ) ) :
+									$menu = wp_get_nav_menu_object( $locations[ $menu_name ] );
+									$menu_items = wp_get_nav_menu_items( $menu->term_id );
+									?>
+									<select name="grants_menu_item">
+									<?php foreach ( $menu_items as $menu_item ) : ?>
+										<option value="<?php echo $menu_item->ID; ?>" <?php selected( get_option( 'grants_menu_item' ), $menu_item->ID ); ?>><?php echo $menu_item->title; ?></option>
+									<?php endforeach; ?>
+									</select>
+								<?php endif; ?>
+						</td>
+					</tr>
+				</table>
+				<?php submit_button(); ?>
+			</form>
+		</div>
+		<?php
 	}
 
 	/**
@@ -586,7 +639,7 @@ class CAHNRSWP_CSANR_Grants {
 	 * @return array Modified list of nav menu classes.
 	 */
 	public function nav_menu_css_class( $classes, $item, $args ) {
-		$id = '';
+		$id = esc_attr( get_option( 'grants_menu_item' ) );
 		$grant = $this->grants_post_type == get_post_type();
 		$grant_archive = is_post_type_archive( $this->grants_post_type );
 		$grant_taxonomy_archive = is_tax( array( $this->grants_investigators_taxonomy, $this->grants_status_taxonomy, $this->grants_topics_taxonomy, $this->grants_types_taxonomy ) );
