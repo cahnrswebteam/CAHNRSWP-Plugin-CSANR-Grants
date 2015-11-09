@@ -8,7 +8,19 @@
 
 		<div class="column one">
 
-			<h2>CSANR Grants</h2>
+			<?php
+      	if ( is_year() ) {
+        	$title = ' - ' . get_the_date( 'Y' );
+    		} elseif ( is_tax() ) {
+        	$title = ' - ' . single_term_title( '', false );
+				} else {
+					$title = '';
+				}
+			?>
+
+			<header class="archive-header">
+				<h1 class="archive-title">CSANR Grants<?php echo $title; ?></h1>
+			</header>
 
 			<table width="100%" border="0" cellspacing="0" cellpadding="0">
 				<thead>
@@ -54,19 +66,32 @@
 						?></td>
 						<?php if ( is_tax( 'investigator' ) && $grant_annual_entries ) : ?>
 						<td><?php
+							if ( $grant_annual_entries ) {
 								$unique_ais = array();
 								foreach ( $grant_annual_entries as $year => $entry ) {
 									if ( $entry['additional_investigators'] ) {
 										foreach ( $entry['additional_investigators'] as $ai ) {
-											if ( ! in_array( $ai, $unique_ais ) ) {
-												$unique_ais[] = $ai;
-												$investigator_object = get_term_by( 'slug', $ai, 'investigator' );
-												echo $investigator_object->name . '<br />';
+											$investigator_object = get_term_by( 'slug', $ai, 'investigator' );
+											if ( ! in_array( $investigator_object->name, $unique_ais ) ) {
+												$unique_ais[] = $investigator_object->name;
+											}
+										}
+									}
+									if ( $entry['student_investigators'] ) {
+										foreach ( $entry['student_investigators'] as $si ) {
+											$investigator_object = get_term_by( 'slug', $si, 'investigator' );
+											if ( ! in_array( $investigator_object->name, $unique_ais ) ) {
+												$unique_ais[] = $investigator_object->name;
 											}
 										}
 									}
 								}
-							?></td>
+								if ( ! empty( $unique_ais ) ) {
+									sort( $unique_ais );
+									echo implode( '<br />', $unique_ais );
+								}
+							}
+						?></td>
 						<?php endif; ?>
 					</tr>
 				<?php endwhile; // end of the loop. ?>
