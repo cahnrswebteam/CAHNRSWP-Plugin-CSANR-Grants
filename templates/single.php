@@ -27,15 +27,15 @@
 				<header class="article-header">
 					<hgroup>
 						<h1 class="article-title"><?php the_title(); ?></h1>
-						<h2 class="grant-id">CSANR Project <?php echo esc_html( $grant_id ); ?></h2>
-						<h2 class="grant-status">Status: <?php foreach( $status as $status_value ) { echo $status_value; } ?></h2>
+						<p class="grant-id">CSANR Project <strong><?php echo esc_html( $grant_id ); ?></strong></p>
+						<p class="grant-status">Status: <strong><?php foreach( $status as $status_value ) { echo $status_value; } ?></strong></p>
 					</hgroup>
 				</header>
 
 				<div class="article-body">
 					<?php if ( get_the_content() != '' ) : ?>
 						<h2>Project Summary</h2>
-						<div style="padding-left:2rem;">
+						<div class="grant-details">
 							<?php the_content(); ?>
 						</div>
 					<?php endif; ?>
@@ -59,7 +59,7 @@
 								<h3><?php echo esc_html( $year ); ?></h3>
 							</dt>
 							<dd>
-								<table>
+								<table class="annual-entry">
 									<?php
                   if ( $investigator_groups ) :
 										foreach ( $investigator_groups as $group => $investigators ) :
@@ -107,17 +107,17 @@
 
 					<?php if ( $grant_publications ) : ?>
           <h2>Publications</h2>
-          <div style="padding-left:2rem;"><?php echo wp_kses_post( apply_filters( 'the_content', $grant_publications ) ); ?></div>
+          <div class="grant-details"><?php echo wp_kses_post( apply_filters( 'the_content', $grant_publications ) ); ?></div>
 					<?php endif; ?>
 
 					<?php if ( $grant_additional_funds ) : ?>
 					<h2>Additional Funds Leveraged</h2>
-					<div style="padding-left:2rem;"><?php echo wp_kses_post( apply_filters( 'the_content', $grant_additional_funds ) ); ?></div>
+					<div class="grant-details"><?php echo wp_kses_post( apply_filters( 'the_content', $grant_additional_funds ) ); ?></div>
 					<?php endif; ?>
 
 					<?php if ( $grant_impacts ) : ?>
 					<h2>Impacts and Outcomes</h2>
-					<div style="padding-left:2rem;"><?php echo wp_kses_post( apply_filters( 'the_content', $grant_impacts ) ); ?></div>
+					<div class="grant-details"><?php echo wp_kses_post( apply_filters( 'the_content', $grant_impacts ) ); ?></div>
 					<?php endif; ?>
 
 				</div>

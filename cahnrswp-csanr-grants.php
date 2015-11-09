@@ -35,9 +35,10 @@ class CAHNRSWP_CSANR_Grants {
 		add_action( 'edit_form_after_editor', array( $this, 'edit_form_after_editor' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ), 10, 1 );
 		add_action( 'save_post_grants', array( $this, 'save_post' ) );
-		//add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
 		add_filter( 'template_include', array( $this, 'template_include' ), 1 );
 		//add_filter( 'nav_menu_css_class', array( $this, 'nav_menu_css_class'), 100, 3 );
+		add_shortcode( 'csanr_grants_browse', array( $this, 'csanr_grants_browse' ) );
 	}
 
 	/**
@@ -185,7 +186,7 @@ class CAHNRSWP_CSANR_Grants {
 	}
 
 	/**
-	 * Add year archive stuff.
+	 * Add rewrite rule for grants/{year} URLs.
 	 */
 	public function grants_rewrite_rules() {
 		add_rewrite_rule(
@@ -468,7 +469,7 @@ class CAHNRSWP_CSANR_Grants {
 				delete_post_meta( $post_id, $field );
 			}
 		}
-		// Annual entries. (There are almost certainly some inefficiencies ahead!)
+		// Annual entries. (There may well be some inefficiencies ahead.)
 		if ( isset( $_POST['_csanr_grant_annual_entry'] ) ) {
 			// Sanitize data and build arrays to work with.
 			$annual_entries = array();
@@ -546,13 +547,15 @@ class CAHNRSWP_CSANR_Grants {
 	 * Enqueue the scripts and styles used on the front end.
 	 */
 	public function wp_enqueue_scripts() {
-		if ( is_single() && $this->grants_post_type == get_post_type() ) {
-			wp_enqueue_style( 'grant', plugins_url( 'css/grant.css', __FILE__ ), array( 'wsu-spine' ) );
-			//wp_enqueue_script( 'grant', plugins_url( 'js/grant.js', __FILE__ ), array( 'jquery' ), '', true );
+		$post = get_post();
+		if ( is_singular() && has_shortcode( $post->post_content, 'csanr_grants_browse' ) ) {
+			wp_enqueue_style( 'grant-browse-shortcode', plugins_url( 'css/grant-browse-shortcode.css', __FILE__ ) );
 		}
-		if ( is_post_type_archive( $this->grants_post_type ) ) {
-			wp_enqueue_style( 'grants-archive', plugins_url( 'css/grant-archive.css', __FILE__ ), array( 'spine-theme' ) );
-			//wp_enqueue_script( 'grants-archive', plugins_url( 'js/grant-archive.js', __FILE__ ), array( 'jquery' ), '', true );
+		if ( is_single() && $this->grants_post_type == get_post_type() ) {
+			wp_enqueue_style( 'grant', plugins_url( 'css/grant.css', __FILE__ ) );
+		}
+		if ( is_post_type_archive( $this->grants_post_type ) || is_tax( array( $this->grants_investigators_taxonomy, $this->grants_status_taxonomy, $this->grants_topics_taxonomy, $this->grants_types_taxonomy ) ) ) {
+			wp_enqueue_style( 'grants-archive', plugins_url( 'css/grants.css', __FILE__ ), array( 'spine-theme' ) );
 		}
 	}
 
@@ -583,11 +586,91 @@ class CAHNRSWP_CSANR_Grants {
 	 * @return array Modified list of nav menu classes.
 	 */
 	public function nav_menu_css_class( $classes, $item, $args ) {
-		$url = site_url() . '/' . $this->grants_post_type . '/';
-		if ( 'site' === $args->theme_location && $this->grants_post_type == get_post_type() && $item->url == $url ) {
+		$id = '';
+		$grant = $this->grants_post_type == get_post_type();
+		$grant_archive = is_post_type_archive( $this->grants_post_type );
+		$grant_taxonomy_archive = is_tax( array( $this->grants_investigators_taxonomy, $this->grants_status_taxonomy, $this->grants_topics_taxonomy, $this->grants_types_taxonomy ) );
+		if ( 'site' === $args->theme_location && $item->ID == $id && ( $grant || $grant_archive || $grant_taxonomy_archive ) ) {
 			$classes[] = 'dogeared';
 		}
 		return $classes;
+	}
+
+	/**
+	 * Filter for grant year archives.
+	 */
+	public function grants_archive_filter( $where ) {
+		$where = 'WHERE post_type = "' . $this->grants_post_type . '" AND post_status = "publish"';
+		return $where;
+	}
+
+	/**
+	 * Function (leveraging grant year archive filter) to display year archive links for grants.
+	 */
+	public function get_grants_archives() {
+		add_filter( 'getarchives_where', array( $this, 'grants_archive_filter' ), 10, 1 );
+		$html = wp_get_archives( array(
+			'type'		        => 'yearly',
+			'format'	        => 'html', 
+			'show_post_count' => 1,
+			'echo'		        => 0,
+			'order'           => 'ASC',
+		) );
+		$html = str_replace( "href='" . get_bloginfo('url') . "/", "href='" . get_bloginfo('url') . "/grants/", $html );
+		echo $html;
+		remove_filter( 'getarchives_where', array( $this, 'grants_archive_filter' ), 10, 1 );
+	}
+
+	/**
+	 * Display a list of ways to browse Grants.
+	 *
+	 * @param array $atts Attributes passed to the shortcode.
+	 *
+	 * @return string Content to display in place of the shortcode.
+	 */
+	public function csanr_grants_browse( $atts ) {
+		ob_start();
+		?>
+		<dl class="cahnrs-accordion slide">
+			<dt>
+				<h3>Year</h3>
+			</dt>
+			<dd>
+				<ul class="grant-years">
+					<?php $this->get_grants_archives(); ?>
+				</ul>
+			</dd>
+		</dl>
+		<?php
+			$grant_taxonomies = array(
+				'Researcher' => $this->grants_investigators_taxonomy,
+				'Type'       => $this->grants_types_taxonomy,
+				'Topic'      => $this->grants_topics_taxonomy,
+			);
+		?>
+		<?php foreach ( $grant_taxonomies as $name => $grant_taxonomy ) : ?>
+		<dl class="cahnrs-accordion slide">
+			<dt>
+				<h3><?php echo $name; ?></h3>
+			</dt>
+			<dd>
+				<?php $grant_taxonomy_terms = get_terms( $grant_taxonomy ); ?>
+				<ul>
+					<?php
+						foreach( $grant_taxonomy_terms as $term ) {
+							$term_link = get_term_link( $term, $grant_taxonomy );
+							?><li><a href="<?php echo $term_link; ?>"><?php echo $term->name; ?></a> (<?php echo $term->count; ?>)</li><?php
+						}
+					?>
+				</ul>
+			</dd>
+		</dl>
+		<?php endforeach; ?>
+    <h3 class="all-grants"><a href="<?php echo get_post_type_archive_link( $this->grants_post_type ); ?>">All Grants &raquo;</a></h3>
+		<?php
+		$html = ob_get_contents();
+		ob_end_clean();
+		return $html;
 	}
 
 }

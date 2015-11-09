@@ -1,0 +1,48 @@
+.article-header hgroup:after {
+	content: '';
+	display: table;
+	clear: both;
+}
+.grant-id,
+.grant-status {
+	float: left;
+	width: 50%;
+}
+.grant-status {
+	text-align: right;
+}
+.cahnrs-accordion {
+	margin: 0;
+	padding: 0 1rem 0 0;
+}
+.cahnrs-accordion:nth-of-type(even) {
+	background: #fff;
+	position: relative;
+}
+.cahnrs-accordion:nth-of-type(even):before {
+	background: #fff;
+	content: '';
+	height: 100%;
+	left: -2rem;
+	position: absolute;
+	top: 0;
+	width: 2rem;
+}
+.cahnrs-accordion dt {
+	padding: 0.5rem 1rem 0.5rem 0;
+}
+.cahnrs-accordion dt h3 {
+	font-size: 1rem;
+}
+.cahnrs-accordion dd {
+	padding: 0 0 1rem 2rem;
+}
+.annual-entry {
+	width: auto;
+}
+.annual-entry td {
+	padding: 0 0 7px;
+}
+.annual-entry tr td:first-of-type {
+	padding-right: 14px;
+}

@@ -1,0 +1,35 @@
+body table td,
+body table th {
+	padding: 0.3em 0.6em;
+	vertical-align: middle;
+}
+thead,
+tr:nth-child(even) {
+	background-color: #fff;
+}
+body table th,
+tr:nth-child(even) td {
+	border-right: 1px solid #f9f9f9;
+}
+tr:nth-child(odd) td {
+	border-right: 1px solid #fff;
+}
+body table th:last-of-type,
+tr:nth-child(even) td:last-of-type,
+tr:nth-child(odd) td:last-of-type {
+	border-right: 0;
+}
+th:first-of-type,
+tr:nth-child(even) td:first-of-type {
+	position: relative;
+}
+th:first-of-type:before,
+tr:nth-child(even) td:first-of-type:before {
+	background: #fff;
+	content: '';
+	height: 100%;
+	left: -2rem;
+	position: absolute;
+	top: 0;
+	width: 2rem;
+}

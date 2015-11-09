@@ -35,8 +35,7 @@
 						<td>
 							<a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
 						</td>
-						<td>
-						<?php
+						<td><?php
 							$grant_annual_entries = get_post_meta( get_the_ID(), '_csanr_grant_annual_entries', true );
 							if ( $grant_annual_entries ) {
 								$unique_pis = array();
@@ -52,10 +51,9 @@
 									}
 								}
 							}
-						?>
-						</td>
-						<?php
-							if ( is_tax( 'investigator' ) && $grant_annual_entries ) {
+						?></td>
+						<?php if ( is_tax( 'investigator' ) && $grant_annual_entries ) : ?>
+						<td><?php
 								$unique_ais = array();
 								foreach ( $grant_annual_entries as $year => $entry ) {
 									if ( $entry['additional_investigators'] ) {
@@ -63,13 +61,13 @@
 											if ( ! in_array( $ai, $unique_ais ) ) {
 												$unique_ais[] = $ai;
 												$investigator_object = get_term_by( 'slug', $ai, 'investigator' );
-												echo $investigator_object->name;
+												echo $investigator_object->name . '<br />';
 											}
 										}
 									}
 								}
-							}
-						?>
+							?></td>
+						<?php endif; ?>
 					</tr>
 				<?php endwhile; // end of the loop. ?>
 				<?php wp_reset_query(); ?>
