@@ -1,6 +1,6 @@
 <?php get_header(); ?>
 
-<main class="<?php echo $main_class; ?>">
+<main class="grants-archive">
 
 	<?php get_template_part('parts/headers'); ?>
 
@@ -10,16 +10,16 @@
 
 			<?php
       	if ( is_year() ) {
-        	$title = ' - ' . get_the_date( 'Y' );
+        	$title_prefix = get_the_date( 'Y' ) . ' ';
     		} elseif ( is_tax() ) {
-        	$title = ' - ' . single_term_title( '', false );
+        	$title_prefix = single_term_title( '', false ) . ' ';
 				} else {
-					$title = '';
+					$title_prefix = '';
 				}
 			?>
 
 			<header class="archive-header">
-				<h1 class="archive-title">CSANR Grants<?php echo $title; ?></h1>
+				<h1 class="archive-title"><?php echo $title_prefix; ?>Grants</h1>
 			</header>
 
 			<table width="100%" border="0" cellspacing="0" cellpadding="0">

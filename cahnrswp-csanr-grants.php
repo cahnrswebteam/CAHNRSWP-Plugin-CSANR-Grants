@@ -87,15 +87,18 @@ class CAHNRSWP_CSANR_Grants {
 
 		$investigators = array(
 			'labels'            => array(
-				'name'          => 'Investigators',
-				'singular_name' => 'Investigator',
-				'search_items'  => 'Search Investigators',
-				'all_items'     => 'All Investigators',
-				'edit_item'     => 'Edit Investigator',
-				'update_item'   => 'Update Investigator',
-				'add_new_item'  => 'Add New Investigator',
-				'new_item_name' => 'New Investigator Name',
-				'menu_name'     => 'Investigators',
+				'name'              => 'Investigators',
+				'singular_name'     => 'Investigator',
+				'all_items'         => 'All Investigators',
+				'edit_item'         => 'Edit Investigator',
+				'view_item'         => 'View Investigator',
+				'update_item'       => 'Update Investigator',
+				'add_new_item'      => 'Add New Investigator',
+				'new_item_name'     => 'New Investigator Name',
+				'parent_item'       => 'Parent Investigator',
+				'parent_item_colon' => 'Parent Investigator:',
+				'search_items'      => 'Search Investigators',
+				'not_found'         => 'No Investigators found.',
 			),
 			'rewrite'      			=> array(
 				'slug'       => $this->grants_post_type . '/' . $this->grants_investigators_taxonomy,
@@ -112,15 +115,18 @@ class CAHNRSWP_CSANR_Grants {
 
 		$status = array(
 			'labels'            => array(
-				'name'          => 'Status',
-				'singular_name' => 'Status',
-				'search_items'  => 'Search Status',
-				'all_items'     => 'All Status',
-				'edit_item'     => 'Edit Status',
-				'update_item'   => 'Update Status',
-				'add_new_item'  => 'Add New Status',
-				'new_item_name' => 'New Status Name',
-				'menu_name'     => 'Status',
+				'name'              => 'Status',
+				'singular_name'     => 'Status',
+				'all_items'         => 'All Status',
+				'edit_item'         => 'Edit Status',
+				'view_item'         => 'View Status',
+				'update_item'       => 'Update Status',
+				'add_new_item'      => 'Add New Status',
+				'new_item_name'     => 'New Status Name',
+				'parent_item'       => 'Parent Status',
+				'parent_item_colon' => 'Parent Status:',
+				'search_items'      => 'Search Status',
+				'not_found'         => 'No Status found.',
 			),
 			'rewrite'      			=> array(
 				'slug'       => $this->grants_post_type . '/' . $this->grants_status_taxonomy,
@@ -137,15 +143,18 @@ class CAHNRSWP_CSANR_Grants {
 
 		$topics = array(
 			'labels'            => array(
-				'name'          => 'Topics',
-				'singular_name' => 'Topic',
-				'search_items'  => 'Search Topic',
-				'all_items'     => 'All Topics',
-				'edit_item'     => 'Edit Topic',
-				'update_item'   => 'Update Topic',
-				'add_new_item'  => 'Add New Topic',
-				'new_item_name' => 'New Topic Name',
-				'menu_name'     => 'Topics',
+				'name'              => 'Topics',
+				'singular_name'     => 'Topic',
+				'all_items'         => 'All Topics',
+				'edit_item'         => 'Edit Topic',
+				'view_item'         => 'View Topic',
+				'update_item'       => 'Update Topic',
+				'add_new_item'      => 'Add New Topic',
+				'new_item_name'     => 'New Topic Name',
+				'parent_item'       => 'Parent Topic',
+				'parent_item_colon' => 'Parent Topic:',
+				'search_items'      => 'Search Topics',
+				'not_found'         => 'No Topics found.',
 			),
 			'rewrite'      			=> array(
 				'slug'       => $this->grants_post_type . '/' . $this->grants_topics_taxonomy,
@@ -162,15 +171,18 @@ class CAHNRSWP_CSANR_Grants {
 
 		$types = array(
 			'labels'            => array(
-				'name'          => 'Types',
-				'singular_name' => 'Type',
-				'search_items'  => 'Search Type',
-				'all_items'     => 'All Types',
-				'edit_item'     => 'Edit Type',
-				'update_item'   => 'Update Type',
-				'add_new_item'  => 'Add New Type',
-				'new_item_name' => 'New Type Name',
-				'menu_name'     => 'Types',
+				'name'              => 'Types',
+				'singular_name'     => 'Type',
+				'all_items'         => 'All Types',
+				'edit_item'         => 'Edit Type',
+				'view_item'         => 'View Type',
+				'update_item'       => 'Update Type',
+				'add_new_item'      => 'Add New Type',
+				'new_item_name'     => 'New Type Name',
+				'parent_item'       => 'Parent Type',
+				'parent_item_colon' => 'Parent Type:',
+				'search_items'      => 'Search Types',
+				'not_found'         => 'No Types found.',
 			),
 			'rewrite'      			=> array(
 				'slug'       => $this->grants_post_type . '/' . $this->grants_types_taxonomy,
@@ -216,7 +228,7 @@ class CAHNRSWP_CSANR_Grants {
 	 * Add options page link to the menu.
 	 */
 	public function admin_menu() {
-		add_submenu_page( 'edit.php?post_type=' . $this->grants_post_type, 'Grants Database Settings', 'Settings', 'manage_options', 'settings', array( $this, 'grants_settings_page' ) );
+		add_submenu_page( 'edit.php?post_type=' . $this->grants_post_type, 'Grants Database Settings', 'Settings', 'manage_options', 'grants_settings', array( $this, 'grants_settings_page' ) );
 	}
 
 	/**
@@ -365,14 +377,22 @@ class CAHNRSWP_CSANR_Grants {
 	public function csanr_grant_information( $post ) {
 		wp_nonce_field( 'grants_meta', 'grants_meta_nonce' );
 		$project_id = get_post_meta( $post->ID, '_csanr_grant_project_id', true );
-		echo '<p><label for="csanr-grant-project-id">Permanent Project ID</label>';
-		echo '<input type="text" name="_csanr_grant_project_id" id="csanr-grant-project-id" value="'. esc_attr( $project_id ) .'"></p>';
 		$funds = get_post_meta( $post->ID, '_csanr_grant_funds', true );
-		echo '<p><label for="csanr-grant-funds">CSANR Funds</label>';
-		echo '<input type="text" name="_csanr_grant_funds" id="csanr-grant-funds" value="'. esc_attr( $funds ) .'"></p>';
 		$arc_funds = get_post_meta( $post->ID, '_csanr_grant_arc_funds', true );
-		echo '<p><label for="csanr-grant-arc-funds">ARC Funds</label>';
-		echo '<input type="text" name="_csanr_grant_arc_funds" id="csanr-grant-arc-funds" value="'. esc_attr( $arc_funds ) .'"></p>';
+		?>
+		<p>
+			<label for="csanr-grant-project-id">Permanent Project ID</label>
+			<input type="text" name="_csanr_grant_project_id" id="csanr-grant-project-id" value="<?php echo esc_attr( $project_id ); ?>">
+		</p>
+		<p>
+  	  <label for="csanr-grant-funds">CSANR Funds</label>
+			<input type="text" name="_csanr_grant_funds" id="csanr-grant-funds" value="<?php echo esc_attr( $funds ); ?>">
+		</p>
+		<p>
+			<label for="csanr-grant-arc-funds">ARC Funds</label>
+			<input type="text" name="_csanr_grant_arc_funds" id="csanr-grant-arc-funds" value="<?php esc_attr( $arc_funds ); ?>">
+		</p>
+		<?php
 	}
 
 	/**

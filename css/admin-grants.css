@@ -1,3 +1,12 @@
 .column-id {
 	width: 1.8em;
 }
+@media screen and (max-width:782px) {
+	.column-taxonomy-investigator,
+	.column-taxonomy-status,
+	.column-taxonomy-topic,
+	.column-taxonomy-type,
+	.column-admin-comments {
+		display: none;
+	}
+}

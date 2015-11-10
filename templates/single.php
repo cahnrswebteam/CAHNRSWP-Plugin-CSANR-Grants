@@ -35,9 +35,7 @@
 				<div class="article-body">
 					<?php if ( get_the_content() != '' ) : ?>
 						<h2>Project Summary</h2>
-						<div class="grant-details">
-							<?php the_content(); ?>
-						</div>
+						<?php the_content(); ?>
 					<?php endif; ?>
 
 					<?php if ( $grant_annual_entries ) : ?>
@@ -107,17 +105,17 @@
 
 					<?php if ( $grant_publications ) : ?>
           <h2>Publications</h2>
-          <div class="grant-details"><?php echo wp_kses_post( apply_filters( 'the_content', $grant_publications ) ); ?></div>
+          <?php echo wp_kses_post( apply_filters( 'the_content', $grant_publications ) ); ?>
 					<?php endif; ?>
 
 					<?php if ( $grant_additional_funds ) : ?>
 					<h2>Additional Funds Leveraged</h2>
-					<div class="grant-details"><?php echo wp_kses_post( apply_filters( 'the_content', $grant_additional_funds ) ); ?></div>
+					<?php echo wp_kses_post( apply_filters( 'the_content', $grant_additional_funds ) ); ?>
 					<?php endif; ?>
 
 					<?php if ( $grant_impacts ) : ?>
 					<h2>Impacts and Outcomes</h2>
-					<div class="grant-details"><?php echo wp_kses_post( apply_filters( 'the_content', $grant_impacts ) ); ?></div>
+					<?php echo wp_kses_post( apply_filters( 'the_content', $grant_impacts ) ); ?>
 					<?php endif; ?>
 
 				</div>
